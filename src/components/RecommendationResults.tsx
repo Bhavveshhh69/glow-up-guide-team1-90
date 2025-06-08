@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowLeft } from "lucide-react";
+import { Sparkles, ArrowLeft, User, Eye, Droplets, Sun } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -12,6 +12,50 @@ interface RecommendationResultsProps {
 }
 
 const RecommendationResults = ({ recommendations, onStartOver }: RecommendationResultsProps) => {
+  // Function to parse and format the plain text recommendations
+  const formatRecommendations = (text: string) => {
+    if (!text) return "Processing your recommendations... Please wait a moment.";
+    
+    // Check if it's already markdown formatted
+    if (text.includes('##') || text.includes('|') || text.includes('**')) {
+      return text;
+    }
+    
+    // Parse the plain text format and convert to structured markdown
+    const lines = text.split('\n').filter(line => line.trim());
+    let formattedText = '';
+    
+    lines.forEach(line => {
+      const trimmedLine = line.trim();
+      
+      if (trimmedLine.includes('Skin Age:')) {
+        formattedText += `## 📊 Skin Analysis\n\n`;
+        formattedText += `**${trimmedLine}**\n\n`;
+      } else if (trimmedLine.includes('Estimated Real Age:')) {
+        formattedText += `**${trimmedLine}**\n\n`;
+      } else if (trimmedLine.includes('Skin Type:')) {
+        formattedText += `**${trimmedLine}**\n\n`;
+      } else if (trimmedLine.includes('Skin Concerns:')) {
+        formattedText += `**${trimmedLine}**\n\n`;
+      } else if (trimmedLine.includes('Key Observations:')) {
+        formattedText += `## 🔍 Key Observations\n\n`;
+      } else if (trimmedLine.startsWith('- ')) {
+        formattedText += `${trimmedLine}\n`;
+      } else if (trimmedLine.includes('Recommended Skincare Products:')) {
+        formattedText += `\n## 🧴 Recommended Skincare Products\n\n`;
+      } else if (trimmedLine && !trimmedLine.includes(':') && trimmedLine.length < 50) {
+        // Likely a product name
+        formattedText += `- **${trimmedLine}**\n`;
+      } else if (trimmedLine) {
+        formattedText += `${trimmedLine}\n\n`;
+      }
+    });
+    
+    return formattedText;
+  };
+
+  const formattedRecommendations = formatRecommendations(recommendations);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
       {/* Header */}
@@ -41,7 +85,8 @@ const RecommendationResults = ({ recommendations, onStartOver }: RecommendationR
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-4xl mx-auto shadow-xl border-0 bg-white/90 backdrop-blur-sm">
           <CardHeader className="text-center bg-gradient-to-r from-green-500/10 via-blue-500/10 to-purple-500/10">
-            <CardTitle className="text-2xl text-gray-800">
+            <CardTitle className="text-2xl text-gray-800 flex items-center justify-center gap-2">
+              <User className="w-6 h-6" />
               Your Personalized Skincare Plan
             </CardTitle>
             <p className="text-gray-600 mt-2">
@@ -55,7 +100,7 @@ const RecommendationResults = ({ recommendations, onStartOver }: RecommendationR
                   remarkPlugins={[remarkGfm]}
                   components={{
                     table: ({ children }) => (
-                      <div className="overflow-x-auto my-4">
+                      <div className="overflow-x-auto my-6">
                         <table className="min-w-full border-collapse border border-gray-300 bg-white rounded-lg shadow-sm">
                           {children}
                         </table>
@@ -77,42 +122,45 @@ const RecommendationResults = ({ recommendations, onStartOver }: RecommendationR
                       </td>
                     ),
                     h1: ({ children }) => (
-                      <h1 className="text-2xl font-bold text-gray-800 mb-4 mt-6 pb-2 border-b-2 border-green-200">
+                      <h1 className="text-2xl font-bold text-gray-800 mb-4 mt-6 pb-2 border-b-2 border-green-200 flex items-center gap-2">
                         {children}
                       </h1>
                     ),
                     h2: ({ children }) => (
-                      <h2 className="text-xl font-semibold text-gray-800 mb-3 mt-5">
+                      <h2 className="text-xl font-semibold text-gray-800 mb-4 mt-6 flex items-center gap-2 bg-gradient-to-r from-green-100 to-blue-100 p-3 rounded-lg border-l-4 border-green-400">
                         {children}
                       </h2>
                     ),
                     h3: ({ children }) => (
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2 mt-4">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-3 mt-5 flex items-center gap-2">
                         {children}
                       </h3>
                     ),
                     p: ({ children }) => (
-                      <p className="mb-4 leading-relaxed text-gray-700">
+                      <p className="mb-4 leading-relaxed text-gray-700 text-base">
                         {children}
                       </p>
                     ),
                     ul: ({ children }) => (
-                      <ul className="list-disc list-inside mb-4 space-y-2 text-gray-700">
+                      <ul className="list-none mb-6 space-y-3 text-gray-700">
                         {children}
                       </ul>
                     ),
                     ol: ({ children }) => (
-                      <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-700">
+                      <ol className="list-decimal list-inside mb-6 space-y-3 text-gray-700">
                         {children}
                       </ol>
                     ),
                     li: ({ children }) => (
-                      <li className="mb-1">
-                        {children}
+                      <li className="mb-2 flex items-start gap-3 bg-white/60 p-3 rounded-lg border-l-2 border-blue-300">
+                        <span className="text-blue-500 mt-1">
+                          <Droplets className="w-4 h-4" />
+                        </span>
+                        <span className="flex-1">{children}</span>
                       </li>
                     ),
                     blockquote: ({ children }) => (
-                      <blockquote className="border-l-4 border-blue-300 pl-4 py-2 my-4 bg-blue-50 italic text-gray-700">
+                      <blockquote className="border-l-4 border-blue-300 pl-6 py-4 my-6 bg-blue-50 italic text-gray-700 rounded-r-lg">
                         {children}
                       </blockquote>
                     ),
@@ -132,7 +180,7 @@ const RecommendationResults = ({ recommendations, onStartOver }: RecommendationR
                       );
                     },
                     strong: ({ children }) => (
-                      <strong className="font-semibold text-gray-900">
+                      <strong className="font-semibold text-gray-900 bg-yellow-100 px-1 rounded">
                         {children}
                       </strong>
                     ),
@@ -143,7 +191,7 @@ const RecommendationResults = ({ recommendations, onStartOver }: RecommendationR
                     ),
                   }}
                 >
-                  {recommendations || "Processing your recommendations... Please wait a moment."}
+                  {formattedRecommendations}
                 </ReactMarkdown>
               </div>
             </div>
