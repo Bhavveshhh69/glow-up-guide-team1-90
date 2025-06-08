@@ -21,15 +21,18 @@ const RecommendationResults = ({ recommendations, onStartOver }: RecommendationR
       return text;
     }
     
-    // Parse the plain text format and convert to structured markdown
-    const lines = text.split('\n').filter(line => line.trim());
+    // Clean up the text and split into lines
+    const lines = text.split(/[\n\r]+/).filter(line => line.trim());
     let formattedText = '';
     
     lines.forEach(line => {
       const trimmedLine = line.trim();
       
+      // Skip empty lines
+      if (!trimmedLine) return;
+      
       if (trimmedLine.includes('Skin Age:')) {
-        formattedText += `## 📊 Skin Analysis\n\n`;
+        formattedText += `## 📊 **Skin Analysis**\n\n`;
         formattedText += `**${trimmedLine}**\n\n`;
       } else if (trimmedLine.includes('Estimated Real Age:')) {
         formattedText += `**${trimmedLine}**\n\n`;
@@ -38,15 +41,19 @@ const RecommendationResults = ({ recommendations, onStartOver }: RecommendationR
       } else if (trimmedLine.includes('Skin Concerns:')) {
         formattedText += `**${trimmedLine}**\n\n`;
       } else if (trimmedLine.includes('Key Observations:')) {
-        formattedText += `## 🔍 Key Observations\n\n`;
-      } else if (trimmedLine.startsWith('- ')) {
+        formattedText += `## 🔍 **Key Observations**\n\n`;
+      } else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('•')) {
         formattedText += `${trimmedLine}\n`;
       } else if (trimmedLine.includes('Recommended Skincare Products:')) {
-        formattedText += `\n## 🧴 Recommended Skincare Products\n\n`;
-      } else if (trimmedLine && !trimmedLine.includes(':') && trimmedLine.length < 50) {
-        // Likely a product name
+        formattedText += `\n## 🧴 **Recommended Skincare Products**\n\n`;
+      } else if (trimmedLine && !trimmedLine.includes(':')) {
+        // Product names or other items - format as list items
         formattedText += `- **${trimmedLine}**\n`;
+      } else if (trimmedLine.includes(':')) {
+        // Any other field with colon
+        formattedText += `**${trimmedLine}**\n\n`;
       } else if (trimmedLine) {
+        // Regular text
         formattedText += `${trimmedLine}\n\n`;
       }
     });
@@ -142,21 +149,21 @@ const RecommendationResults = ({ recommendations, onStartOver }: RecommendationR
                       </p>
                     ),
                     ul: ({ children }) => (
-                      <ul className="list-none mb-6 space-y-3 text-gray-700">
+                      <ul className="list-none mb-6 space-y-2 text-gray-700">
                         {children}
                       </ul>
                     ),
                     ol: ({ children }) => (
-                      <ol className="list-decimal list-inside mb-6 space-y-3 text-gray-700">
+                      <ol className="list-decimal list-inside mb-6 space-y-2 text-gray-700">
                         {children}
                       </ol>
                     ),
                     li: ({ children }) => (
-                      <li className="mb-2 flex items-start gap-3 bg-white/60 p-3 rounded-lg border-l-2 border-blue-300">
-                        <span className="text-blue-500 mt-1">
+                      <li className="mb-2 flex items-start gap-3 bg-white/60 p-3 rounded-lg border-l-2 border-blue-300 shadow-sm">
+                        <span className="text-blue-500 mt-1 flex-shrink-0">
                           <Droplets className="w-4 h-4" />
                         </span>
-                        <span className="flex-1">{children}</span>
+                        <span className="flex-1 leading-relaxed">{children}</span>
                       </li>
                     ),
                     blockquote: ({ children }) => (
@@ -180,7 +187,7 @@ const RecommendationResults = ({ recommendations, onStartOver }: RecommendationR
                       );
                     },
                     strong: ({ children }) => (
-                      <strong className="font-semibold text-gray-900 bg-yellow-100 px-1 rounded">
+                      <strong className="font-semibold text-gray-900 bg-yellow-100/50 px-1 rounded">
                         {children}
                       </strong>
                     ),
