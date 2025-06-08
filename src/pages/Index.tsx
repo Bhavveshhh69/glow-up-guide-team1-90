@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, Upload, Sparkles, Settings } from "lucide-react";
+import { Camera, Upload, Sparkles, Settings, Loader } from "lucide-react";
 import AdminConfig from "@/components/AdminConfig";
 import RecommendationResults from "@/components/RecommendationResults";
 
@@ -17,7 +17,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [recommendations, setRecommendations] = useState('');
-  const [webhookUrl, setWebhookUrl] = useState('');
+  const [webhookUrl, setWebhookUrl] = useState('https://randomnames.app.n8n.cloud/webhook-test/8ec5d0d9-8d1d-46d6-9fa5-3796a05f4060');
   const { toast } = useToast();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,13 +78,15 @@ const Index = () => {
           description: "Your skincare recommendations are ready.",
         });
       } else {
-        throw new Error('Failed to process request');
+        const errorText = await response.text();
+        console.error("Webhook response error:", errorText);
+        throw new Error(`Webhook responded with status ${response.status}: ${errorText}`);
       }
     } catch (error) {
       console.error("Error:", error);
       toast({
         title: "Error",
-        description: "Failed to process your request. Please try again.",
+        description: "Failed to process your request. Please check your webhook configuration and try again.",
         variant: "destructive",
       });
     } finally {
@@ -105,6 +107,35 @@ const Index = () => {
         recommendations={recommendations} 
         onStartOver={resetForm}
       />
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex items-center justify-center">
+        <Card className="max-w-md mx-auto shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+          <CardContent className="p-8 text-center">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 p-4 rounded-full">
+                <Loader className="w-8 h-8 text-white animate-spin" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Analyzing Your Skin
+                </h3>
+                <p className="text-gray-600">
+                  Our AI is processing your photos and concerns. This may take a few moments...
+                </p>
+              </div>
+              <div className="bg-gradient-to-r from-pink-100 to-purple-100 rounded-lg p-4 w-full">
+                <p className="text-sm text-gray-700">
+                  Please wait while we generate your personalized skincare recommendations.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -229,17 +260,10 @@ const Index = () => {
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 hover:from-pink-600 hover:via-purple-600 hover:to-blue-600 text-white py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]"
               >
-                {isLoading ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Analyzing Your Skin...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center space-x-2">
-                    <Upload className="w-5 h-5" />
-                    <span>Get My Recommendations</span>
-                  </div>
-                )}
+                <div className="flex items-center justify-center space-x-2">
+                  <Upload className="w-5 h-5" />
+                  <span>Get My Recommendations</span>
+                </div>
               </Button>
             </form>
           </CardContent>
