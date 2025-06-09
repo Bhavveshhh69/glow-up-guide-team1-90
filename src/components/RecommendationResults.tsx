@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,7 @@ const RecommendationResults = ({ recommendations, onStartOver }: RecommendationR
     // Clean up the text and split into lines
     const lines = text.split(/[\n\r]+/).filter(line => line.trim());
     let formattedText = '';
+    let currentSection = '';
     
     lines.forEach(line => {
       const trimmedLine = line.trim();
@@ -31,30 +31,41 @@ const RecommendationResults = ({ recommendations, onStartOver }: RecommendationR
       // Skip empty lines
       if (!trimmedLine) return;
       
-      if (trimmedLine.includes('Skin Age:')) {
+      // Check for main section headers
+      if (trimmedLine === 'Skin Analysis' || trimmedLine.includes('Skin Analysis')) {
         formattedText += `## 📊 **Skin Analysis**\n\n`;
-        formattedText += `**${trimmedLine}**\n\n`;
-      } else if (trimmedLine.includes('Estimated Real Age:')) {
-        formattedText += `**${trimmedLine}**\n\n`;
-      } else if (trimmedLine.includes('Skin Type:')) {
-        formattedText += `**${trimmedLine}**\n\n`;
-      } else if (trimmedLine.includes('Skin Concerns:')) {
-        formattedText += `**${trimmedLine}**\n\n`;
-      } else if (trimmedLine.includes('Key Observations:')) {
-        formattedText += `## 🔍 **Key Observations**\n\n`;
-      } else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('•')) {
-        formattedText += `${trimmedLine}\n`;
-      } else if (trimmedLine.includes('Recommended Skincare Products:')) {
+        currentSection = 'analysis';
+      } else if (trimmedLine === 'Recommended Skincare Products' || trimmedLine.includes('Recommended Skincare Products')) {
         formattedText += `\n## 🧴 **Recommended Skincare Products**\n\n`;
-      } else if (trimmedLine && !trimmedLine.includes(':')) {
-        // Product names or other items - format as list items
+        currentSection = 'products';
+      } else if (trimmedLine.startsWith('- ')) {
+        // Handle bullet points in analysis section
+        if (currentSection === 'analysis') {
+          const content = trimmedLine.substring(2).trim();
+          if (content.includes(':')) {
+            formattedText += `**${content}**\n\n`;
+          } else {
+            formattedText += `- ${content}\n`;
+          }
+        } else {
+          formattedText += `${trimmedLine}\n`;
+        }
+      } else if (trimmedLine.includes('Skin Age:') || trimmedLine.includes('Estimated Real Age:') || 
+                 trimmedLine.includes('Skin Type:') || trimmedLine.includes('Skin Concerns:')) {
+        formattedText += `**${trimmedLine}**\n\n`;
+      } else if (currentSection === 'products' && trimmedLine && !trimmedLine.includes(':')) {
+        // Product names - format as list items
         formattedText += `- **${trimmedLine}**\n`;
       } else if (trimmedLine.includes(':')) {
         // Any other field with colon
         formattedText += `**${trimmedLine}**\n\n`;
       } else if (trimmedLine) {
-        // Regular text
-        formattedText += `${trimmedLine}\n\n`;
+        // Regular text or product names
+        if (currentSection === 'products') {
+          formattedText += `- **${trimmedLine}**\n`;
+        } else {
+          formattedText += `${trimmedLine}\n\n`;
+        }
       }
     });
     
